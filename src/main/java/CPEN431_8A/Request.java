@@ -18,6 +18,7 @@ public class Request {
 
     public Request() {
         byte[] messageIdBytes = new byte[MESSAGEID_SIZE];
+        random.nextBytes(messageIdBytes);
         this.messageId = ByteString.copyFrom(messageIdBytes);
     }
 

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 
 public class Transport {
     DatagramSocket socket = new DatagramSocket();
@@ -45,6 +44,12 @@ public class Transport {
 
                 byte[] trimmedResponse = trimByteArray(responsePacket.getData(), responsePacket.getLength());
                 response = Codec.decodeResponse(trimmedResponse);
+
+                // messageId doesn't match, might be some old delayed packet
+                if (!response.messageId.equals(request.messageId)) {
+                    System.out.println("messageId doesn't match, might be some old delayed packet");
+                    continue;
+                }
 
                 hasResponse = true;
             } catch (IOException | Codec.InvalidChecksumException e) {

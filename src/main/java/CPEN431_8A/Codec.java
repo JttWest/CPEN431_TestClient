@@ -58,12 +58,14 @@ public class Codec {
         KeyValueResponse.KVResponse resPayload = KeyValueResponse.KVResponse.parseFrom(msg.getPayload());
 
         Response response = new Response();
+        response.messageId = msg.getMessageID();
 
         if (resPayload.hasErrCode()) response.code = Enums.ResponseCode.fromInteger(resPayload.getErrCode());
         if (resPayload.hasValue()) response.value = resPayload.getValue();
         if (resPayload.hasVersion()) response.version = resPayload.getVersion();
         if (resPayload.hasPid()) response.pid = resPayload.getPid();
         if (resPayload.hasOverloadWaitTime()) response.overloadWaitTime = resPayload.getOverloadWaitTime();
+        if (resPayload.hasMembershipCount()) response.membershipCount = resPayload.getMembershipCount();
 
         return response;
     }

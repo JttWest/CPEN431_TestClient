@@ -20,15 +20,24 @@ public class Enums {
 
         public static ResponseCode fromInteger(int x) {
             switch (x) {
-                case 0: return SUCCESS;
-                case 1: return NONEXISTENT_KEY;
-                case 2: return OUT_OF_SPACE;
-                case 3: return TEMP_SYSTEM_OVERLOAD;
-                case 4: return INTERNAL_KV_FAILURE;
-                case 5: return UNRECOGNIZED_COMMAND;
-                case 6: return INVALID_KEY;
-                case 7: return INVALID_VALUE;
-                default: return UNKNOWN;
+                case 0:
+                    return SUCCESS;
+                case 1:
+                    return NONEXISTENT_KEY;
+                case 2:
+                    return OUT_OF_SPACE;
+                case 3:
+                    return TEMP_SYSTEM_OVERLOAD;
+                case 4:
+                    return INTERNAL_KV_FAILURE;
+                case 5:
+                    return UNRECOGNIZED_COMMAND;
+                case 6:
+                    return INVALID_KEY;
+                case 7:
+                    return INVALID_VALUE;
+                default:
+                    return UNKNOWN;
             }
         }
 
@@ -45,6 +54,7 @@ public class Enums {
         WIPEOUT((byte) 5),
         IS_ALIVE((byte) 6),
         GET_PID((byte) 7),
+        GET_MEMBERSHIP_COUNT((byte) 8),
         HEALTH_CHECK((byte) 25),
         HEART_BEAT((byte) 26),
         EPIDEMIC((byte) 27),
@@ -72,6 +82,8 @@ public class Enums {
                     return IS_ALIVE;
                 case 7:
                     return GET_PID;
+                case 8:
+                    return GET_MEMBERSHIP_COUNT;
                 case 25:
                     return HEALTH_CHECK;
                 case 26:

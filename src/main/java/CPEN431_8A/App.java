@@ -1,8 +1,6 @@
 package CPEN431_8A;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -15,27 +13,36 @@ public class App
             IOException,
             ServerNodes.InvalidServerFileException
     {
+        if (args.length != 1) {
+            System.out.println("Need to pass in test type!");
+            System.exit(1);
+        }
+
         ConcurrentHashMap<Integer, ServerNodes.Node> nodes =
                 ServerNodes.generateNodesMap("servers.txt");
 
-        // IsAlive Test
-        Transport transport = new Transport();
+        TestTypes.Test test = null;
 
-        for (ServerNodes.Node node : nodes.values()) {
-            Request isAliveRequest = new Request();
-            isAliveRequest.command = Enums.CommandCode.IS_ALIVE;
-
-            Response response = transport.sendRequest(node, isAliveRequest, 1);
-
-            if (response == null) {
-                System.out.printf("IS_ALIVE request to %s (%d) timeout.\n",
-                        node.address.getHostName(),
-                        node.id);
-            } else {
-                System.out.printf("%s (%d) is ALIVE\n",
-                        node.address.getHostName(),
-                        node.id);
-            }
+        switch (args[0]) {
+            case "IS_ALIVE":
+                test = new TestTypes.IsAliveTest(nodes);
+                break;
+            case "WIPEOUT":
+                test = new TestTypes.WipeoutTest(nodes);
+                break;
+            case "MEMBERSHIP_COUNT":
+                test = new TestTypes.GetMembershipCountTest(nodes);
+                break;
+            case "SFE_PUT":
+                test = new TestTypes.SingleFrontEndPutTest(nodes, 500);
+                break;
+            default:
+                System.out.println("Invalid test type. Use: IS_ALIVE, WIPEOUT, MEMBERSHIP_COUNT, SFE_PUT");
+                System.exit(1);
         }
+
+        Thread testThread = new Thread(test);
+
+        testThread.start();
     }
 }

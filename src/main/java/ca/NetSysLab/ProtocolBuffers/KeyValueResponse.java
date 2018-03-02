@@ -56,6 +56,15 @@ public final class KeyValueResponse {
      * <code>optional int32 overloadWaitTime = 5;</code>
      */
     int getOverloadWaitTime();
+
+    /**
+     * <code>optional int32 membershipCount = 6;</code>
+     */
+    boolean hasMembershipCount();
+    /**
+     * <code>optional int32 membershipCount = 6;</code>
+     */
+    int getMembershipCount();
   }
   /**
    * Protobuf type {@code KVResponse}
@@ -132,6 +141,11 @@ public final class KeyValueResponse {
             case 40: {
               bitField0_ |= 0x00000010;
               overloadWaitTime_ = input.readInt32();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              membershipCount_ = input.readInt32();
               break;
             }
           }
@@ -249,12 +263,28 @@ public final class KeyValueResponse {
       return overloadWaitTime_;
     }
 
+    public static final int MEMBERSHIPCOUNT_FIELD_NUMBER = 6;
+    private int membershipCount_;
+    /**
+     * <code>optional int32 membershipCount = 6;</code>
+     */
+    public boolean hasMembershipCount() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional int32 membershipCount = 6;</code>
+     */
+    public int getMembershipCount() {
+      return membershipCount_;
+    }
+
     private void initFields() {
       errCode_ = 0;
       value_ = com.google.protobuf.ByteString.EMPTY;
       pid_ = 0;
       version_ = 0;
       overloadWaitTime_ = 0;
+      membershipCount_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -288,6 +318,9 @@ public final class KeyValueResponse {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeInt32(5, overloadWaitTime_);
       }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt32(6, membershipCount_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -316,6 +349,10 @@ public final class KeyValueResponse {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, overloadWaitTime_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(6, membershipCount_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -444,6 +481,8 @@ public final class KeyValueResponse {
         bitField0_ = (bitField0_ & ~0x00000008);
         overloadWaitTime_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
+        membershipCount_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -492,6 +531,10 @@ public final class KeyValueResponse {
           to_bitField0_ |= 0x00000010;
         }
         result.overloadWaitTime_ = overloadWaitTime_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.membershipCount_ = membershipCount_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -522,6 +565,9 @@ public final class KeyValueResponse {
         }
         if (other.hasOverloadWaitTime()) {
           setOverloadWaitTime(other.getOverloadWaitTime());
+        }
+        if (other.hasMembershipCount()) {
+          setMembershipCount(other.getMembershipCount());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -717,6 +763,38 @@ public final class KeyValueResponse {
         return this;
       }
 
+      private int membershipCount_ ;
+      /**
+       * <code>optional int32 membershipCount = 6;</code>
+       */
+      public boolean hasMembershipCount() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional int32 membershipCount = 6;</code>
+       */
+      public int getMembershipCount() {
+        return membershipCount_;
+      }
+      /**
+       * <code>optional int32 membershipCount = 6;</code>
+       */
+      public Builder setMembershipCount(int value) {
+        bitField0_ |= 0x00000020;
+        membershipCount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 membershipCount = 6;</code>
+       */
+      public Builder clearMembershipCount() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        membershipCount_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:KVResponse)
     }
 
@@ -742,11 +820,12 @@ public final class KeyValueResponse {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\026KeyValueResponse.proto\"d\n\nKVResponse\022\017" +
+      "\n\026KeyValueResponse.proto\"}\n\nKVResponse\022\017" +
       "\n\007errCode\030\001 \002(\r\022\r\n\005value\030\002 \001(\014\022\013\n\003pid\030\003 " +
       "\001(\005\022\017\n\007version\030\004 \001(\005\022\030\n\020overloadWaitTime" +
-      "\030\005 \001(\005B0\n\034ca.NetSysLab.ProtocolBuffersB\020" +
-      "KeyValueResponse"
+      "\030\005 \001(\005\022\027\n\017membershipCount\030\006 \001(\005B0\n\034ca.Ne" +
+      "tSysLab.ProtocolBuffersB\020KeyValueRespons" +
+      "e"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -765,7 +844,7 @@ public final class KeyValueResponse {
     internal_static_KVResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_KVResponse_descriptor,
-        new java.lang.String[] { "ErrCode", "Value", "Pid", "Version", "OverloadWaitTime", });
+        new java.lang.String[] { "ErrCode", "Value", "Pid", "Version", "OverloadWaitTime", "MembershipCount", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
