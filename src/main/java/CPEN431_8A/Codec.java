@@ -12,70 +12,15 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 public class Codec {
-
-    public static Request decodeRequest(byte[] rawRequest) throws
-            InvalidChecksumException,
-            InvalidProtocolBufferException,
-            UnknownHostException {
-
-        // parse the request into Protobuf object
-        Message.Msg requestMsg = Message.Msg.parseFrom(rawRequest);
-
-        // validate checksum
-        long msgChecksum = requestMsg.getCheckSum();
-        byte[] genChecksumInput = concatByteArrays(requestMsg.getMessageID().toByteArray(), requestMsg.getPayload().toByteArray());
-        if (msgChecksum != generateChecksum(genChecksumInput))
-            throw new InvalidChecksumException("Checksum from id and payload is wrong");
-
-        // get command and return proper Request
-        ByteString messageId = requestMsg.getMessageID();
-
-        KeyValueRequest.KVRequest kvRequest = KeyValueRequest.KVRequest.parseFrom(requestMsg.getPayload());
-        Enums.CommandCode command = Enums.CommandCode.fromInteger(kvRequest.getCommand());
-        ByteString key = kvRequest.getKey();
-        ByteString value = kvRequest.getValue();
-        int version = kvRequest.getVersion();
-        int senderNodeId = kvRequest.hasSenderNodeId() ? kvRequest.getSenderNodeId() : -1;
-        int nodeId = kvRequest.hasNodeId() ? kvRequest.getNodeId() : -1;
-
-        // packet was forwarded by one of the nodes
-        if (kvRequest.hasOriginAddress()) {
-            InetAddress address = InetAddress.getByName(kvRequest.getOriginAddress());
-            int port = kvRequest.getOriginPort();
-
-            return new Request(messageId, command, key, value, version, senderNodeId, nodeId, address, port);
-        }
-
-        return new Request(messageId, command, key, value, version, senderNodeId, nodeId);
-    }
-
-    // encodes a request for forwarding to a different node
+    // encodes a request to be send to the nodes
     public static byte[] encodeRequest(Request request) {
-    	KeyValueRequest.KVRequest.Builder requestBuilder;
-    	if(request.messageId == ByteString.EMPTY) {
-    		//if epidemic
-			if (request.command == Enums.CommandCode.EPIDEMIC) {
-				requestBuilder = KeyValueRequest.KVRequest.newBuilder()
-		                .setCommand(request.command.value())
-		                .setNodeId(request.nodeId);
-			}
-			//else is healthcheck/heartbeat request
-			else {
-				requestBuilder = KeyValueRequest.KVRequest.newBuilder()
-							.setCommand(request.command.value())
-			                .setSenderNodeId(request.senderNodeId);
-			}	
-    		 
-    	}
-    	else {
-	    	requestBuilder = KeyValueRequest.KVRequest.newBuilder()
-	                .setCommand(request.command.value())
-	                .setKey(request.key)
-	                .setValue(request.value)
-	                .setVersion(request.version)
-	                .setOriginAddress(request.originAddress.getHostAddress())
-	                .setOriginPort(request.originPort);
-    	}
+        KeyValueRequest.KVRequest.Builder requestBuilder =
+                KeyValueRequest.KVRequest.newBuilder()
+                        .setCommand(request.command.value());
+
+        if (request.key != null) requestBuilder.setKey(request.key);
+        if (request.value != null) requestBuilder.setValue(request.value);
+        requestBuilder.setVersion(request.version);
 
         KeyValueRequest.KVRequest requestPayload = requestBuilder.build();
 
@@ -93,27 +38,34 @@ public class Codec {
         return msg.toByteArray();
     }
 
-    public static byte[] encodeResponse(ByteString messageId, Response response) {
-        KeyValueResponse.KVResponse.Builder responseBuilder = KeyValueResponse.KVResponse.newBuilder()
-                .setErrCode(response.code.value());
+    public static Response decodeResponse(byte[] rawResponse) throws
+            InvalidProtocolBufferException,
+            InvalidChecksumException {
+        // create the Message
+        Message.Msg msg = Message.Msg.parseFrom(rawResponse);
 
-        if (response.body != null)
-            response.body.setBody(responseBuilder);
+        // validate the uniqueId
+        // if (!isCorrectUniqueId(uniqueId, replyId))
+        //     throw new MismatchUniqueIdException("UniqueId in reply is incorrect.");
 
-        KeyValueResponse.KVResponse responsePayload = responseBuilder.build();
+        // validate checksum
+        byte[] replyId = msg.getMessageID().toByteArray();
+        long checksum = msg.getCheckSum();
+        if (checksum != generateChecksum(concatByteArrays(replyId, msg.getPayload().toByteArray())))
+            throw new InvalidChecksumException("Checksum from id and payload is wrong");
 
-        // create the checksum as messageId +++ ResponsePayload
-        long checksumValue = generateChecksum(
-                concatByteArrays(messageId.toByteArray(), responsePayload.toByteArray()));
+        // payload should be good at this point
+        KeyValueResponse.KVResponse resPayload = KeyValueResponse.KVResponse.parseFrom(msg.getPayload());
 
-        // create Message
-        Message.Msg msg = Message.Msg.newBuilder()
-                .setMessageID(messageId)
-                .setPayload(responsePayload.toByteString())
-                .setCheckSum(checksumValue)
-                .build();
+        Response response = new Response();
 
-        return msg.toByteArray();
+        if (resPayload.hasErrCode()) response.code = Enums.ResponseCode.fromInteger(resPayload.getErrCode());
+        if (resPayload.hasValue()) response.value = resPayload.getValue();
+        if (resPayload.hasVersion()) response.version = resPayload.getVersion();
+        if (resPayload.hasPid()) response.pid = resPayload.getPid();
+        if (resPayload.hasOverloadWaitTime()) response.overloadWaitTime = resPayload.getOverloadWaitTime();
+
+        return response;
     }
 
     private static long generateChecksum(byte[] bytes) {

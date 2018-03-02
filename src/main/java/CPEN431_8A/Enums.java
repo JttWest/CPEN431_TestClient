@@ -9,12 +9,27 @@ public class Enums {
         INTERNAL_KV_FAILURE((byte) 4),
         UNRECOGNIZED_COMMAND((byte) 5),
         INVALID_KEY((byte) 6),
-        INVALID_VALUE((byte) 7);
+        INVALID_VALUE((byte) 7),
+        UNKNOWN((byte) 50);
 
         private final byte value;
 
         ResponseCode(byte value) {
             this.value = value;
+        }
+
+        public static ResponseCode fromInteger(int x) {
+            switch (x) {
+                case 0: return SUCCESS;
+                case 1: return NONEXISTENT_KEY;
+                case 2: return OUT_OF_SPACE;
+                case 3: return TEMP_SYSTEM_OVERLOAD;
+                case 4: return INTERNAL_KV_FAILURE;
+                case 5: return UNRECOGNIZED_COMMAND;
+                case 6: return INVALID_KEY;
+                case 7: return INVALID_VALUE;
+                default: return UNKNOWN;
+            }
         }
 
         public int value() {
@@ -42,18 +57,29 @@ public class Enums {
         }
 
         public static CommandCode fromInteger(int x) {
-            switch(x) {
-                case 1: return PUT;
-                case 2: return GET;
-                case 3: return REMOVE;
-                case 4: return SHUTDOWN;
-                case 5: return WIPEOUT;
-                case 6: return IS_ALIVE;
-                case 7: return GET_PID;
-                case 25: return HEALTH_CHECK;
-                case 26: return HEART_BEAT;
-                case 27: return EPIDEMIC;
-                default: return UNRECOGNIZED;
+            switch (x) {
+                case 1:
+                    return PUT;
+                case 2:
+                    return GET;
+                case 3:
+                    return REMOVE;
+                case 4:
+                    return SHUTDOWN;
+                case 5:
+                    return WIPEOUT;
+                case 6:
+                    return IS_ALIVE;
+                case 7:
+                    return GET_PID;
+                case 25:
+                    return HEALTH_CHECK;
+                case 26:
+                    return HEART_BEAT;
+                case 27:
+                    return EPIDEMIC;
+                default:
+                    return UNRECOGNIZED;
             }
         }
 
