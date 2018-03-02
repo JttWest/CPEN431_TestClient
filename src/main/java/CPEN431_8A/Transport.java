@@ -9,8 +9,7 @@ import java.net.SocketException;
 
 public class Transport {
     DatagramSocket socket = new DatagramSocket();
-    int REQUEST_TIMEOUT = 1000;
-
+    int REQUEST_TIMEOUT = 500;
 
     byte[] responseBuffer = new byte[13000];
 
