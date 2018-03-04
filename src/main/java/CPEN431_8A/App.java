@@ -36,6 +36,9 @@ public class App
             case "SFE_PUT":
                 test = new TestTypes.SingleFrontEndPutTest(nodes, 500);
                 break;
+            case "SHUTDOWN":
+            	test = new TestTypes.ShutDownTest(nodes);
+            	break;
             default:
                 System.out.println("Invalid test type. Use: IS_ALIVE, WIPEOUT, MEMBERSHIP_COUNT, SFE_PUT");
                 System.exit(1);
