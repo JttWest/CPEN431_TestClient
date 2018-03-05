@@ -13,11 +13,6 @@ public class App
             IOException,
             ServerNodes.InvalidServerFileException
     {
-        if (args.length != 1) {
-            System.out.println("Need to pass in test type!");
-            System.exit(1);
-        }
-
         ConcurrentHashMap<Integer, ServerNodes.Node> nodes =
                 ServerNodes.generateNodesMap("servers.txt");
 
@@ -34,7 +29,9 @@ public class App
                 test = new TestTypes.GetMembershipCountTest(nodes);
                 break;
             case "SFE_PUT":
-                test = new TestTypes.SingleFrontEndPutTest(nodes, 500);
+                int frontendNodeId = Integer.parseInt(args[1]);
+                int numRuns = Integer.parseInt(args[2]);
+                test = new TestTypes.SingleFrontEndPutTest(nodes, numRuns, frontendNodeId);
                 break;
             case "SHUTDOWN":
             	test = new TestTypes.ShutDownTest(nodes);

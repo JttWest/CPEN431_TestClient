@@ -119,18 +119,22 @@ public class TestTypes {
 
     public static class SingleFrontEndPutTest extends Test {
         int numRuns;
+        int frontendNodeId;
 
-        public SingleFrontEndPutTest(ConcurrentHashMap<Integer, ServerNodes.Node> nodes, int numRuns) {
+        public SingleFrontEndPutTest(ConcurrentHashMap<Integer, ServerNodes.Node> nodes,
+                                     int numRuns,
+                                     int frontendNodeId) {
             super(nodes);
             System.out.println(this.getClass().getSimpleName());
             this.numRuns = numRuns;
+            this.frontendNodeId = frontendNodeId;
         }
 
         @Override
         public void run() {
-            ServerNodes.Node node = nodes.get(0);
+            ServerNodes.Node node = nodes.get(frontendNodeId);
 
-            HashMap<Integer, Integer> timeoutResult = new HashMap<>();
+            HashMap<Integer, Integer> failResult = new HashMap<>();
 
             for (int i = 0; i < numRuns; ++i) {
                 // put a random key-value pair
@@ -155,20 +159,31 @@ public class TestTypes {
                     System.out.printf("Key hashed to node %d: timeout.\n",
                             hashcode);
 
-                    if (timeoutResult.containsKey(hashcode))
-                        timeoutResult.put(hashcode, timeoutResult.get(hashcode) + 1);
-                    else
-                        timeoutResult.put(hashcode, 1);
+                    updateFailResult(failResult, hashcode);
                 } else {
+                    if (putResponse.code != Enums.ResponseCode.SUCCESS)
+                        updateFailResult(failResult, hashcode);
+
                     System.out.printf("Key hashed to node %d: %s.\n",
                             hashcode,
                             putResponse.code.toString());
                 }
             }
 
-            for (HashMap.Entry<Integer, Integer> resEntry : timeoutResult.entrySet()) {
-                System.out.println(resEntry.getKey() + ": " + resEntry.getValue() + " timeouts");
+            if (failResult.size() != 0) {
+                System.out.println("\nFail Result:");
+
+                for (HashMap.Entry<Integer, Integer> resEntry : failResult.entrySet()) {
+                    System.out.println("NodeId " + resEntry.getKey() + ": " + resEntry.getValue() + " fails");
+                }
             }
+        }
+
+        private void updateFailResult(HashMap<Integer, Integer> failResult, int failNodeId) {
+            if (failResult.containsKey(failNodeId))
+                failResult.put(failNodeId, failResult.get(failNodeId) + 1);
+            else
+                failResult.put(failNodeId, 1);
         }
     }
     
