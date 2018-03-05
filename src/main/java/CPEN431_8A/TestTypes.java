@@ -171,4 +171,61 @@ public class TestTypes {
             }
         }
     }
+    
+    // send a SHUTDOWN -> IS_ALIVE request to each node
+    public static class ShutDownTest extends Test {
+        public ShutDownTest(ConcurrentHashMap<Integer, ServerNodes.Node> nodes) {
+            super(nodes);
+            System.out.println(this.getClass().getSimpleName());
+        }
+
+        @Override
+        public void run() {
+            for (ServerNodes.Node node : nodes.values()) {
+                Request ShutDownRequest = new Request();
+                ShutDownRequest.command = Enums.CommandCode.SHUTDOWN;
+
+                // send shut down
+                Response response = transport.sendRequest(node, ShutDownRequest, 1);
+
+                if (response == null) {
+                    System.out.printf("%s (%d): did not respond (PASS).\n",
+                            node.address.getHostName(),
+                            node.id);
+                } else {
+                    System.out.printf("%s (%d): %s (FAIL) \n",
+                            node.address.getHostName(),
+                            node.id,
+                            response.code.toString());
+                }
+                
+                // verify it was shut down
+                System.out.printf("Checking if %s (%d) isAlive \n", 
+                		node.address.getHostAddress(),
+                		node.id);
+                
+                Request isAliveRequest = new Request();
+                isAliveRequest.command = Enums.CommandCode.IS_ALIVE;
+
+                response = transport.sendRequest(node, isAliveRequest, 1);
+
+                if (response == null) {
+                    System.out.printf("%s (%d): did not respond (PASS).\n",
+                            node.address.getHostName(),
+                            node.id);
+                } else {
+                    System.out.printf("%s (%d): %s (FAIL) \n",
+                            node.address.getHostName(),
+                            node.id,
+                            response.code.toString());
+                }
+                
+                
+                
+            }
+        }
+    }
+
+    
+    
 }
