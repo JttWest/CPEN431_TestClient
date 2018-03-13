@@ -9,13 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TestTypes {
-    public static abstract class Test implements Runnable {
+    static final SecureRandom random = new SecureRandom();
+
+    public static abstract class Test {
         Transport transport;
         ConcurrentHashMap<Integer, ServerNodes.Node> nodes;
         final int MAX_KEY_SIZE = 32;
         final int MAX_VALUE_SIZE = 10000;
 
-        static final SecureRandom random = new SecureRandom();
+        public int numOfThreads = 1;
 
         public Test(ConcurrentHashMap<Integer, ServerNodes.Node> nodes) {
             this.nodes = nodes;
@@ -28,6 +30,8 @@ public class TestTypes {
                 System.exit(1);
             }
         }
+
+        public abstract void execute();
     }
 
     // send a IS_ALIVE request to each node
@@ -37,8 +41,7 @@ public class TestTypes {
             System.out.println(this.getClass().getSimpleName());
         }
 
-        @Override
-        public void run() {
+        public void execute() {
             for (ServerNodes.Node node : nodes.values()) {
                 Request isAliveRequest = new Request();
                 isAliveRequest.command = Enums.CommandCode.IS_ALIVE;
@@ -66,8 +69,7 @@ public class TestTypes {
             System.out.println(this.getClass().getSimpleName());
         }
 
-        @Override
-        public void run() {
+        public void execute() {
             for (ServerNodes.Node node : nodes.values()) {
                 Request isAliveRequest = new Request();
                 isAliveRequest.command = Enums.CommandCode.WIPEOUT;
@@ -94,8 +96,7 @@ public class TestTypes {
             System.out.println(this.getClass().getSimpleName());
         }
 
-        @Override
-        public void run() {
+        public void execute() {
             for (ServerNodes.Node node : nodes.values()) {
                 Request getMembershipCountRequest = new Request();
                 getMembershipCountRequest.command = Enums.CommandCode.GET_MEMBERSHIP_COUNT;
@@ -130,8 +131,7 @@ public class TestTypes {
             this.frontendNodeId = frontendNodeId;
         }
 
-        @Override
-        public void run() {
+        public void execute() {
             ServerNodes.Node node = nodes.get(frontendNodeId);
 
             HashMap<Integer, Integer> failResult = new HashMap<>();
@@ -141,12 +141,12 @@ public class TestTypes {
                 Request putRequest = new Request();
                 putRequest.command = Enums.CommandCode.PUT;
 
-                int randKeyLength = ThreadLocalRandom.current().nextInt(0, MAX_KEY_SIZE + 1);
+                int randKeyLength = ThreadLocalRandom.current().nextInt(1, MAX_KEY_SIZE + 1);
                 byte[] randKeyBytes = new byte[randKeyLength];
                 random.nextBytes(randKeyBytes);
                 putRequest.key = ByteString.copyFrom(randKeyBytes);
 
-                int randValueLength = ThreadLocalRandom.current().nextInt(0, MAX_VALUE_SIZE + 1);
+                int randValueLength = ThreadLocalRandom.current().nextInt(1, MAX_VALUE_SIZE + 1);
                 byte[] randValueBytes = new byte[randValueLength];
                 random.nextBytes(randValueBytes);
                 putRequest.value = ByteString.copyFrom(randValueBytes);
@@ -194,8 +194,7 @@ public class TestTypes {
             System.out.println(this.getClass().getSimpleName());
         }
 
-        @Override
-        public void run() {
+        public void execute() {
             for (ServerNodes.Node node : nodes.values()) {
                 Request ShutDownRequest = new Request();
                 ShutDownRequest.command = Enums.CommandCode.SHUTDOWN;
@@ -224,23 +223,54 @@ public class TestTypes {
 
                 response = transport.sendRequest(node, isAliveRequest, 1);
 
-                if (response == null) {
-                    System.out.printf("%s (%d): did not respond (PASS).\n",
-                            node.address.getHostName(),
-                            node.id);
-                } else {
+                // only log the ones that failed to reduce noise
+                if (response != null) {
                     System.out.printf("%s (%d): %s (FAIL) \n",
                             node.address.getHostName(),
                             node.id,
                             response.code.toString());
                 }
-                
-                
-                
             }
         }
     }
 
-    
-    
+    // Max memory test on first node in nodelist
+    public static class MaxMemoryTest extends Test {
+        int valueSize;
+
+        public MaxMemoryTest(ConcurrentHashMap<Integer, ServerNodes.Node> nodes, int valueSize) {
+            super(nodes);
+            this.valueSize = valueSize;
+            System.out.println(this.getClass().getSimpleName());
+        }
+
+        public void execute() {
+            ServerNodes.Node node = nodes.get(0);
+            System.out.printf("Target: %s:%d\n", node.address.getHostName(), node.port);
+
+            long numPuts = 0;
+
+            Response response;
+
+            do {
+                ByteString key = RandomUtil.getRandomByteString(1, MAX_KEY_SIZE);
+                ByteString value = RandomUtil.getRandomByteString(valueSize, valueSize);
+
+                Request request = new Request();
+                request.command = Enums.CommandCode.PUT;
+                request.key = key;
+                request.value = value;
+
+                response = transport.sendRequest(node, request, 3);
+                numPuts++;
+            } while (response != null && response.code == Enums.ResponseCode.SUCCESS);
+
+            String responseResult = response == null ? "Timeout" : response.code.toString();
+            double memoryLimit = valueSize * numPuts;
+
+            System.out.println("Memory Test Complete");
+            System.out.println("Terminating Response: " + responseResult);
+            System.out.println("Memory Limit: " + memoryLimit / 1000000 + "MB");
+        }
+    }
 }

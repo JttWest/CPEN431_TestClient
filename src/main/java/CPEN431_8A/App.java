@@ -36,13 +36,15 @@ public class App
             case "SHUTDOWN":
             	test = new TestTypes.ShutDownTest(nodes);
             	break;
+            case "MEMORY":
+                int valueSize = Integer.parseInt(args[1]);
+                test = new TestTypes.MaxMemoryTest(nodes, valueSize);
+                break;
             default:
                 System.out.println("Invalid test type. Use: IS_ALIVE, WIPEOUT, MEMBERSHIP_COUNT, SFE_PUT");
                 System.exit(1);
         }
 
-        Thread testThread = new Thread(test);
-
-        testThread.start();
+        test.execute();
     }
 }
