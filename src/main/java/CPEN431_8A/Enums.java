@@ -1,6 +1,16 @@
 package CPEN431_8A;
 
 public class Enums {
+    public enum TestType {
+        IS_ALIVE,
+        WIPEOUT,
+        MEMBERSHIP_COUNT,
+        SFE_PUT,
+        SHUTDOWN,
+        MEMORY,
+        RESPONSE_TIME
+    }
+
     public enum ResponseCode {
         SUCCESS((byte) 0),
         NONEXISTENT_KEY((byte) 1),

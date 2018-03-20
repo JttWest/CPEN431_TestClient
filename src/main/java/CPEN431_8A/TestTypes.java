@@ -4,6 +4,8 @@ import com.google.protobuf.ByteString;
 
 import java.net.SocketException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -271,6 +273,96 @@ public class TestTypes {
             System.out.println("Memory Test Complete");
             System.out.println("Terminating Response: " + responseResult);
             System.out.println("Memory Limit: " + memoryLimit / 1000000 + "MB");
+        }
+    }
+
+    public static class ResponseTimeTest extends Test {
+        int numRuns;
+        int selectTopNodes;
+
+        public ResponseTimeTest(ConcurrentHashMap<Integer, ServerNodes.Node> nodes,
+                                int numRuns,
+                                int selectTopNodes) {
+            super(nodes);
+            System.out.println(this.getClass().getSimpleName());
+            this.numRuns = numRuns;
+            this.selectTopNodes = selectTopNodes;
+        }
+
+        public void execute() {
+            HashMap<Integer, NodeResultData> result = initResultMap(nodes.size());
+
+            for (int i = 0; i < numRuns; ++i) {
+                for (ServerNodes.Node node : nodes.values()) {
+                    long startTime = System.currentTimeMillis();
+
+                    Request isAliveRequest = new Request();
+                    isAliveRequest.command = Enums.CommandCode.IS_ALIVE;
+
+                    Response response = transport.sendRequest(node, isAliveRequest, 1);
+
+                    if (response != null && response.code == Enums.ResponseCode.SUCCESS) {
+                        long finishTime = System.currentTimeMillis();
+                        NodeResultData nodeResultData = result.get(node.id);
+
+                        nodeResultData.numRuns++;
+                        nodeResultData.totalResponseTime += (finishTime - startTime);
+                    }
+                }
+            }
+
+            // sort the result from best response to worst
+            ArrayList<NodeResultData> resultList = new ArrayList<>(result.values());
+            Collections.sort(resultList);
+
+            // print results
+            for (NodeResultData nodeData : resultList) {
+                ServerNodes.Node node = nodes.get(nodeData.nodeId);
+                System.out.printf("%s (%d): %.2fms in %d runs\n",
+                        node.address.getHostName(),
+                        node.id,
+                        nodeData.numRuns == 0 ? 0.0 : (nodeData.totalResponseTime / nodeData.numRuns),
+                        nodeData.numRuns);
+            }
+
+            // get the top nodes in servers.txt format
+            for (NodeResultData nodeData : resultList.subList(0, selectTopNodes)) {
+                ServerNodes.Node node = nodes.get(nodeData.nodeId);
+                System.out.printf("%s:%d\n", node.address.getHostName(), node.port);
+            }
+        }
+
+        private class NodeResultData implements Comparable<NodeResultData> {
+            public int nodeId;
+            public int numRuns;
+            public double totalResponseTime;
+
+            public NodeResultData(int nodeId) {
+                this.nodeId = nodeId;
+                numRuns = 0;
+                totalResponseTime = 0.0;
+            }
+
+            @Override
+            public int compareTo(NodeResultData data) {
+                // no runs were successful
+                if (numRuns == 0)
+                    return 1;
+                else if (data.numRuns == 0)
+                    return -1;
+
+                return (totalResponseTime / numRuns) > (data.totalResponseTime / data.numRuns) ?
+                        1 : -1;
+            }
+        }
+
+        private HashMap<Integer, NodeResultData> initResultMap(int numNodes) {
+            HashMap<Integer, NodeResultData> result = new HashMap<>();
+            for (int i = 0; i < numNodes; ++i) {
+                result.put(i, new NodeResultData(i));
+            }
+
+            return result;
         }
     }
 }
